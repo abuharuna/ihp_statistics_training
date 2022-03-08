@@ -1,0 +1,87 @@
+---
+title: "Investigation of theoretical mean and quantile"
+author: "Abubakar HARUNA"
+date: "04/02/2022"
+output: 
+  html_document: 
+    fig_caption: yes
+    fig_height: 3.5
+    fig_width: 4
+    toc: yes
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(viridisLite)
+library(ismev)
+
+library(data.table)
+
+library(ggplot2)
+knitr::opts_chunk$set(echo = F)
+opts_chunk$set(warning = F)
+opts_chunk$set(message = F)
+```
+
+# Part 1
+
+
+
+```{r}
+#load the data
+data = read.csv2(file = "../Data/lausanne.csv", header = T, sep = ";", stringsAsFactors = F, )
+summary(data)
+str(data)
+data$tre200nx = as.numeric(data$tre200nx)
+data$time = as.Date(as.character(data$time), "%Y%m%d")
+
+summary(data)
+#plot(data$time, data$tre200nx)
+
+
+```
+
+(a) Plot the yearly maxima. What do you observe ?
+
+```{r}
+#convert to yearly data maximum
+
+year_vec = lubridate::year(data$time)
+yearly_data =aggregate(data$tre200nx, list(year_vec), max, na.rm =T)
+colnames(yearly_data) = c("year", "obs")
+
+plot(yearly_data$year, yearly_data$obs)
+
+
+
+```
+
+
+
+(b) Fit a constant-parameter GEV distribution to the yearly maxima and assess your model using quantile and probability plots. Comment. Discuss the estimated value of the shape parameter.
+
+```{r}
+#?ismev
+mod_0=gev.fit(yearly_data$obs)
+gev.diag(mod_0)
+fit_gev$mle
+#comment/ negative shape param
+
+
+```
+
+
+(c) Fit non-constant-parameter GEV distributions to the yearly maxima and discuss the significance of a yearly varying location/shape/scale parameter.
+
+```{r}
+mod_1 =gev.fit(xdat = yearly_data$obs,ydat = matrix(yearly_data$year, ncol = 1 ),  mul = 1)
+mod_2 =gev.fit(xdat = yearly_data$obs,ydat = matrix(yearly_data$year, ncol = 1 ),  shl  = 1)
+mod_3 =gev.fit(xdat = yearly_data$obs,ydat = matrix(yearly_data$year, ncol = 1 ),  sigl  = 1)
+
+AIC(mod_0, mod_1, mod_2, mod_3)
+```
+
+(d) Using the selected model calculate the probability that next's year maximum will exceed all
+previous levels.
+(e) Estimate the 10-year return level from this model (Practical 2).
